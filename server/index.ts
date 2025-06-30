@@ -25,6 +25,7 @@ const io = new Server(ioServer, {
 });
 
 const emailToSocketMapping = new Map<string, string>();
+const socketIdToEmailMapping =  new Map<string, string>();
 
 io.on('connection', (socket) => {
   console.log('New client connected:', socket.id);
@@ -34,9 +35,23 @@ io.on('connection', (socket) => {
     console.log(`User ${emailId} joined room ${roomId}`);
 
     emailToSocketMapping.set(emailId, socket.id);
+    socketIdToEmailMapping.set(socket.id,emailId)
     socket.join(roomId);
+    socket.emit('joined-room',{roomId})
     socket.broadcast.to(roomId).emit('user-joined', { emailId });
   });
+
+  socket.on('call-user',data=>{
+    const {emailId,offer} =data
+    const fromEmail  = socketIdToEmailMapping.get(socket.id)
+    const socketId = emailToSocketMapping.get(emailId)
+      if (socketId) {  // Guard to ensure socketId is a valid string
+    socket.to(socketId).emit('incomming-call', { from: fromEmail, offer });
+  } else {
+    console.log(`No socket found for emailId: ${emailId}`);
+  }
+ 
+  })
 });
 
 ioServer.listen(8001, () => {
