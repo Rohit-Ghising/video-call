@@ -52,6 +52,12 @@ io.on('connection', (socket) => {
   }
  
   })
+   socket.on('call-accepted',data =>{
+    const {emailId,ans}= data
+    const sockedId = emailToSocketMapping.get(emailId)
+    if(sockedId){
+    socket.to(sockedId).emit('call-accepted',{ans})}
+   })
 });
 
 ioServer.listen(8001, () => {
